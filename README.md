@@ -7,4 +7,4 @@ Usage:
 1. Clone the repo to the chosen location. Open cmd and run: git clone repoURL
 2. Go to app directory: cd weather-app
 3. Install required packages: npm install 
-4. Run the app (localhost:3000): npm run
+4. Run the app (localhost:3000): npm start
