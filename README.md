@@ -1,6 +1,6 @@
 # weather-app
 
-Weather-app gets the weather information (location, temperature, humidity and wind speed) for the current location from OpenWeatherMap API (SPA app).
+Weather-app gets the weather information for the current location from OpenWeatherMap API.
 
 Usage:
 
