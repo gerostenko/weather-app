@@ -12,40 +12,42 @@ export const fetchActions = () => dispatch => {
     .then(res => res.text())
     .then((response) => {
       //stringify xml and parse it to JS object
-      parseString(response, function (err, result) {
-        let rawResponse = JSON.parse(JSON.stringify(result)); 
-          var weatherObj = {};
-          //getting only what I need
-          weatherObj.city = rawResponse.current.city[0]["$"].name;
-          weatherObj.humidity =  rawResponse.current.humidity[0]["$"].value;
-          weatherObj.temp = rawResponse.current.temperature[0]["$"].value;
-          weatherObj.wind = rawResponse.current.wind[0].speed[0]["$"].value;
-          dispatch({
-            type: FETCH_WEATHER,
-            payload: Array.of(weatherObj)
-          }
-        )
-      })})
-
-  // this version uses JSON provided by OWM API (map the object here so both versions can be used interchangeably)
-  //   fetch('http://api.openweathermap.org/data/2.5/weather?lat=' + location.coords.latitude + 
-  //   '&lon=' + location.coords.longitude + '&units=metric&APPID=' + apiKey)  
-  //   .then(res => res.json())
-  //     .then(weatherForCurrent => {
-  //       var weatherObj = {};
-  //       weatherObj.city = weatherForCurrent.name;
-  //       weatherObj.humidity = weatherForCurrent.main.humidity;
-  //       weatherObj.temp = weatherForCurrent.main.temp;
-  //       weatherObj.wind = weatherForCurrent.wind.speed;
-  //       dispatch({
-  //         type: FETCH_WEATHER,
-  //         payload: Array.of(weatherObj)
-  //       }
-  //     )
-  //   }
-  // )
+      parseString(response, (err, result) => {
+        let rawResponse = JSON.parse(JSON.stringify(result)).current; 
+        //creating the object with properly set props
+        let weatherObj = parseWeatherObj(rawResponse);
+        dispatch({
+          type: FETCH_WEATHER,
+          payload: Array.of(weatherObj)
+        }
+      )
+    })})
   },
   error => {
-    console.log('location error', error);
+    //sending empty obj to notify the consumer about the error
+    dispatch({
+      type: FETCH_WEATHER,
+      payload: [{error: error.message}]
+    });
   });
  };
+
+ //helper func to parse the weather obj
+function parseWeatherObj(rawResponse) {
+  let weatherObj = {};
+  Object.keys(rawResponse).forEach(key => {
+    //wind is a special case, it's nested
+    if(key === 'wind'){
+      weatherObj[key] = {};
+      Object.keys(rawResponse[key][0]).forEach(keysOfKey =>  {
+        if(rawResponse[key][0][keysOfKey][0].hasOwnProperty("$"))
+          weatherObj[key][keysOfKey] = rawResponse[key][0][keysOfKey][0]["$"];
+        else
+          weatherObj[key][keysOfKey] = rawResponse[key][0][keysOfKey][0];
+      });
+    }
+    else 
+      weatherObj[key] = rawResponse[key][0]["$"];
+ });
+ return weatherObj;
+}
